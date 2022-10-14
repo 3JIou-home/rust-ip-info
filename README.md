@@ -9,6 +9,11 @@ cd ./rust-ip-info
 cargo buld --release
 ./target/release/rust-ip-info --ip 1.1.1.1
 ```
+or for buil in docker
+
+```bash
+./build.sh
+```
 
 ## Example output
 
