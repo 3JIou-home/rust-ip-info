@@ -1,22 +1,16 @@
 use clap::Parser;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
+use log::error;
 use cli_table::{format::Justify, print_stdout, Cell, Style, Table};
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IpInfo {
     pub query: String,
-    pub status: String,
     pub country: String,
-    pub country_code: String,
-    pub region: String,
     pub region_name: String,
     pub city: String,
-    pub zip: String,
-    pub lat: f64,
-    pub lon: f64,
-    pub timezone: String,
     pub isp: String,
     pub org: String,
     #[serde(rename = "as")]
@@ -38,10 +32,27 @@ struct Args {
 async fn main() {
     let args = Args::parse();
     
-    let query = format!("http://ip-api.com/json/{}?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,mobile,proxy,hosting,query", args.ip);
-    let body = reqwest::get(query).await.unwrap();
+    let query = format!("http://ip-api.com/json/{}?fields=country,regionName,city,isp,org,as,mobile,proxy,hosting,query", args.ip);
+    let body = match reqwest::get(query).await {
+        Ok(res) => {
+            res
+        }
+        Err(e) => {
+            error!("{}", e);
+            return
+        }
+    };
 
-    let result: IpInfo = serde_json::from_str(body.text().await.unwrap().as_str()).unwrap();
+    let result: IpInfo = match serde_json::from_str(body.text().await.unwrap().as_str()) {
+        Ok(res) => {
+            res
+        }
+        Err(e) => {
+            error!("{}", e);
+            return
+        }
+    };
+
     let result_table = vec![
         vec!["Request ip".cell(), result.query.cell().justify(Justify::Right)],
         vec!["Country".cell(), result.country.cell().justify(Justify::Right)],
@@ -57,9 +68,14 @@ async fn main() {
     .table()
     .title(vec![
         "Name".cell().bold(true),
-        "Response".cell().bold(true)
+        "Response".cell().bold(true).justify(Justify::Right)
     ])
     .bold(true);
-    
-    print_stdout(result_table).unwrap();
+
+    match print_stdout(result_table){
+        Ok(_) => {}
+        Err(e) => {
+            println!("{}", e);
+        }
+    };
 }

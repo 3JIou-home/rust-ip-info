@@ -10,8 +10,9 @@ description = "Tool for get info about ip from ip-api.com"
 [dependencies]
 reqwest="0.11.12"
 clap = { version = "4.0.14", features = ["derive"] }
+cli-table = "0.4.7"
 serde_derive = "1.0.145"
 serde = "1.0.145"
 serde_json = "1.0.86"
 tokio = { version = "1.21.2", features = ["full"] }
-cli-table = "0.4.7"
+log = { version = "0.4.17", features = ["std", "serde", "kv_unstable"] }
